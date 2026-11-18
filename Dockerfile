@@ -3,7 +3,7 @@
 # ---- WebUI ----------------------------------------------------------------------
 FROM --platform=$BUILDPLATFORM node:22-alpine AS web
 WORKDIR /web
-RUN corepack enable
+RUN corepack enable && corepack prepare pnpm@10.33.2 --activate
 COPY web/package.json web/pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile
 COPY web/ ./
