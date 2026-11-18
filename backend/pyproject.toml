@@ -1,0 +1,47 @@
+[project]
+name = "fileforage"
+version = "0.1.0"
+description = "本地多模态语义文件搜索：基于 EmbeddingGemma 2 的文本、图片、视频、音频向量检索"
+license = "MIT"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.120",
+    "uvicorn[standard]>=0.38",
+    "pydantic>=2.11",
+    "numpy>=2.1",
+    "torch>=2.9",
+    "transformers>=5.18",
+    "sentence-transformers[image,audio,video]>=6.1.0",
+    "pillow>=11",
+    "pillow-heif>=1.0",
+    "pypdf>=6",
+    "pypdfium2>=4.30",
+    "python-docx>=1.1",
+    "python-pptx>=1.0",
+    "charset-normalizer>=3.4",
+    "faster-whisper>=1.2",
+    "av>=15",
+    "watchfiles>=1.0",
+    "python-multipart>=0.0.20",
+]
+
+[dependency-groups]
+dev = ["pytest>=8", "httpx>=0.28", "ruff>=0.13"]
+
+[project.scripts]
+fileforage = "fileforage.__main__:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["fileforage"]
+
+[tool.ruff]
+line-length = 110
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "RUF", "PIE"]
+ignore = ["B008", "RUF001", "RUF002", "RUF003", "E501"]
