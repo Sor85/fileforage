@@ -30,6 +30,8 @@ jobs:
           uv run --no-sync ruff check fileforage tests
           uv run --no-sync pytest -q
       - uses: pnpm/action-setup@v4
+        with:
+          package_json_file: web/package.json
       - uses: actions/setup-node@v4
         with:
           node-version: 22
