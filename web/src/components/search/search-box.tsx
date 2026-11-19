@@ -71,11 +71,10 @@ export function SearchBox({
         onSubmit()
       }}
       className={cn(
-        "group relative flex w-full items-center border bg-card shadow-(--shadow-float) transition-[box-shadow,border-color] duration-300 focus-within:border-transparent",
+        "group relative flex w-full items-center border bg-card shadow-(--shadow-float) transition-[box-shadow,border-color] duration-200 focus-within:border-foreground/25",
         hero ? "h-16 gap-3 rounded-[22px] pr-2.5 pl-5" : "h-12 gap-2.5 rounded-2xl pr-2 pl-4"
       )}
     >
-      <span className="search-glow" aria-hidden />
       <IconSearch className={cn("shrink-0 text-muted-foreground", hero ? "size-[22px]" : "size-[18px]")} stroke={1.8} />
       {imagePreview && (
         <span className="flex shrink-0 items-center gap-1.5 rounded-xl border bg-muted/60 py-1 pr-1 pl-1">

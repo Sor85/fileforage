@@ -1,7 +1,7 @@
 import * as React from "react"
 import { AnimatePresence, motion } from "motion/react"
 import { useQuery } from "@tanstack/react-query"
-import { IconFolderPlus, IconLoader2, IconMoodEmpty, IconPhotoSearch, IconSparkles } from "@tabler/icons-react"
+import { IconFolderPlus, IconLoader2, IconMoodEmpty, IconPhotoSearch } from "@tabler/icons-react"
 
 import { FILTERS, KIND_COLOR, KIND_LABEL, type FilterKey } from "@/components/kind"
 import { ResultsGrid } from "@/components/search/results-grid"
@@ -123,20 +123,13 @@ export function SearchPage() {
             transition={{ duration: 0.7, ease: [0.32, 0.72, 0, 1] }}
             className="flex flex-col items-center text-center"
           >
-            <span className="mb-6 inline-flex items-center gap-1.5 rounded-full border bg-card/70 px-3 py-1 text-[12px] font-medium text-muted-foreground shadow-(--shadow-card) backdrop-blur">
-              <IconSparkles className="size-3.5 text-brand" />
-              EmbeddingGemma 2 · 全部在本机运行
-            </span>
-            <h1 className="text-[40px] leading-[1.1] font-semibold tracking-[-0.035em] text-balance sm:text-[56px]">
-              用一句话，
-              <span className="font-display text-[1.12em] font-normal tracking-[-0.01em] italic">
-                <span className="text-gradient pr-1">找到</span>
-              </span>
-              任何文件
+            <h1 className="text-[32px] leading-[1.2] font-semibold tracking-[-0.025em] text-balance sm:text-[40px]">
+              用一句话找到任何文件
             </h1>
-            <p className="mt-4 max-w-2xl text-[15px] leading-relaxed text-pretty text-muted-foreground">
+            <p className="mt-3 max-w-2xl text-[15px] leading-relaxed text-pretty text-muted-foreground">
               文档、图片、视频与音频共享同一个语义空间。描述画面、复述一句台词，或丢进一张相似的图片。
             </p>
+            <p className="mt-2 text-[12.5px] text-muted-foreground/80">EmbeddingGemma 2 · 全部在本机运行</p>
           </motion.div>
 
           <div className="mt-9 w-full">
@@ -163,7 +156,7 @@ export function SearchPage() {
                 key={e}
                 type="button"
                 onClick={() => setSearchParams({ q: e }, false)}
-                className="rounded-full border bg-card/60 px-3 py-1 text-[12.5px] text-muted-foreground backdrop-blur transition-colors outline-none hover:border-foreground/15 hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/40"
+                className="rounded-full border bg-card px-3 py-1 text-[12.5px] text-muted-foreground transition-colors outline-none hover:border-foreground/15 hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/40"
               >
                 {e}
               </button>
@@ -315,23 +308,6 @@ function HeroStats({ byKind, total }: { byKind: Partial<Record<Kind, number>>; t
           </span>
         ))}
     </motion.div>
-  )
-}
-
-export function Aurora({ compact }: { compact: boolean }) {
-  return (
-    <div
-      aria-hidden
-      className={cn(
-        "pointer-events-none absolute inset-x-0 top-0 -z-0 overflow-hidden transition-[height,opacity] duration-700 ease-(--ease-sheet)",
-        compact ? "h-[280px] opacity-60" : "h-[720px] opacity-100"
-      )}
-    >
-      <div className="bg-grid absolute inset-0 [mask-image:radial-gradient(ellipse_70%_60%_at_50%_30%,black,transparent)]" />
-      <div className="aurora-a absolute -top-40 left-[12%] h-[480px] w-[560px] rounded-full bg-brand/22 blur-[110px]" />
-      <div className="aurora-b absolute -top-24 right-[10%] h-[420px] w-[520px] rounded-full bg-brand-2/20 blur-[110px]" />
-      <div className="absolute inset-x-0 bottom-0 h-40 bg-linear-to-b from-transparent to-background" />
-    </div>
   )
 }
 
