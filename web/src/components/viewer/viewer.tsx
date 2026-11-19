@@ -74,7 +74,7 @@ function FileModal({ layer }: { layer: Extract<ViewerLayer, { type: "file" }> })
               className="mr-auto"
               onClick={() => viewer.open({ type: "similar", fileId: file.id, fileName: file.name })}
             >
-              <IconSparkles className="size-4 text-brand" />
+              <IconSparkles className="size-4" />
               查找相似
             </Button>
             <Button variant="ghost" onClick={() => copy(file.path)}>
@@ -266,7 +266,7 @@ function MatchCard({
 }) {
   const timed = file.kind === "video" || file.kind === "audio"
   return (
-    <section className="rounded-2xl border bg-linear-to-br from-brand/7 to-brand-2/5 p-3.5">
+    <section className="rounded-2xl border bg-muted/40 p-3.5">
       <p className="flex items-center gap-1.5 text-[12px] font-medium text-brand">
         <IconSparkles className="size-3.5" />
         最佳匹配 · {CHUNK_LABEL[focus.kind] ?? focus.kind}

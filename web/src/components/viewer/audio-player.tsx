@@ -39,7 +39,7 @@ export const AudioPlayer = React.forwardRef<
   const progress = duration ? time / duration : 0
 
   return (
-    <div className="rounded-2xl bg-linear-to-br from-kind-audio/16 via-kind-audio/6 to-transparent p-4 ring-1 ring-kind-audio/15">
+    <div className="rounded-2xl border bg-kind-audio/8 p-4">
       <audio
         ref={audio}
         src={src}
@@ -60,7 +60,7 @@ export const AudioPlayer = React.forwardRef<
       <div className="flex items-center gap-4">
         <Button
           size="icon"
-          className="size-12 shrink-0 rounded-full bg-kind-audio text-white shadow-lg shadow-kind-audio/25 hover:bg-kind-audio/90 dark:text-black"
+          className="size-11 shrink-0 rounded-full bg-kind-audio text-white hover:bg-kind-audio/90 dark:text-black"
           onClick={() => (playing ? audio.current?.pause() : audio.current?.play())}
           aria-label={playing ? "暂停" : "播放"}
         >

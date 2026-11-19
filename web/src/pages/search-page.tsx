@@ -116,22 +116,22 @@ export function SearchPage() {
       }}
     >
       {!hasQuery ? (
-        <div className="relative mx-auto flex min-h-[calc(100dvh-64px)] max-w-2xl flex-col items-center justify-center px-5 pb-[14vh]">
+        <div className="relative mx-auto flex min-h-[calc(100dvh-64px)] max-w-3xl flex-col items-center justify-center px-5 pb-[14vh]">
           <motion.div
             initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, ease: [0.32, 0.72, 0, 1] }}
             className="flex flex-col items-center text-center"
           >
-            <h1 className="text-[28px] leading-[1.25] font-semibold tracking-[-0.02em] text-balance sm:text-[32px]">
+            <h1 className="text-[32px] leading-[1.2] font-semibold tracking-[-0.025em] text-balance sm:text-[40px]">
               用一句话找到任何文件
             </h1>
-            <p className="mt-2.5 max-w-xl text-[14px] leading-relaxed text-balance text-muted-foreground">
+            <p className="mt-3 max-w-2xl text-[15px] leading-relaxed text-pretty text-muted-foreground">
               文档、图片、视频与音频共享同一个语义空间。描述画面、复述一句台词，或丢进一张相似的图片。
             </p>
           </motion.div>
 
-          <div className="mt-8 w-full">
+          <div className="mt-8 w-full max-w-2xl">
             <SearchBox
               size="hero"
               value={input}

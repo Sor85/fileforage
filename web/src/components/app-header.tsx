@@ -44,7 +44,7 @@ export function AppHeader({ route }: { route: Route }) {
         <BrandWordmark className="hidden sm:inline" />
       </a>
 
-      <nav className="mx-auto flex items-center gap-0.5 rounded-full border bg-card/70 p-1 shadow-(--shadow-card) backdrop-blur-xl">
+      <nav className="mx-auto flex items-center gap-0.5 rounded-full border bg-card p-1">
         {NAV.map((n) => {
           const active = n.route === route
           return (
@@ -65,7 +65,7 @@ export function AppHeader({ route }: { route: Route }) {
                 <motion.span
                   layoutId="nav-pill"
                   className="absolute inset-0 rounded-full bg-primary"
-                  transition={{ type: "spring", bounce: 0.18, duration: 0.5 }}
+                  transition={{ type: "spring", bounce: 0, duration: 0.35 }}
                 />
               )}
               <n.icon className="relative size-4" stroke={1.9} />
@@ -129,7 +129,7 @@ function IndexingIndicator() {
         <Button
           variant="ghost"
           className={cn(
-            "h-8 gap-2 rounded-full border bg-card/70 px-2.5 text-[12px] font-medium tabular-nums shadow-(--shadow-card) backdrop-blur-xl",
+            "h-8 gap-2 rounded-full border bg-card px-2.5 text-[12px] font-medium tabular-nums",
             s.model.status === "error" && "text-destructive"
           )}
           aria-label="索引状态"
@@ -137,8 +137,7 @@ function IndexingIndicator() {
           {sum.busy ? (
             <ProgressRing value={sum.value} spinning={sum.spinning} />
           ) : (
-            <span className="relative flex size-[18px] items-center justify-center">
-              <span className="absolute size-2 animate-ping rounded-full bg-emerald-500/40 [animation-duration:2.4s]" />
+            <span className="flex size-[18px] items-center justify-center">
               <span className="size-2 rounded-full bg-emerald-500" />
             </span>
           )}
@@ -219,13 +218,11 @@ function ThemeToggle() {
         <Button
           variant="ghost"
           size="icon"
-          className="size-8 rounded-full border bg-card/70 shadow-(--shadow-card) backdrop-blur-xl"
+          className="size-8 rounded-full text-muted-foreground"
           onClick={() => setTheme(next)}
           aria-label={`主题：${label}`}
         >
-          <motion.span key={pref} initial={{ rotate: -90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} className="flex">
-            <Icon className="size-4" stroke={1.8} />
-          </motion.span>
+          <Icon className="size-4" stroke={1.8} />
         </Button>
       </TooltipTrigger>
       <TooltipContent>主题：{label}</TooltipContent>

@@ -66,8 +66,8 @@ export function SettingsPage() {
 
       <Section title="嵌入模型" desc="文本、图片、视频与音频统一编码到同一个 768 维向量空间">
         <div className="flex items-center gap-4 p-4">
-          <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-brand/15 to-brand-2/15 text-brand">
-            <IconCpu className="size-[22px]" stroke={1.7} />
+          <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-muted text-muted-foreground">
+            <IconCpu className="size-5" stroke={1.7} />
           </span>
           <div className="min-w-0 flex-1">
             <p className="truncate font-mono text-[13px] font-medium">{data.env.model}</p>
@@ -180,11 +180,11 @@ export function SettingsPage() {
       <AnimatePresence>
         {dirty && (
           <motion.div
-            initial={{ opacity: 0, y: 24 }}
+            initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 24 }}
-            transition={{ duration: 0.45, ease: [0.32, 0.72, 0, 1] }}
-            className="fixed inset-x-0 bottom-5 z-30 mx-auto flex w-[calc(100%-32px)] max-w-md items-center gap-3 rounded-2xl border bg-popover/90 py-2.5 pr-2.5 pl-4 shadow-(--shadow-float) backdrop-blur-xl"
+            exit={{ opacity: 0, y: 12 }}
+            transition={{ duration: 0.25, ease: [0.32, 0.72, 0, 1] }}
+            className="fixed inset-x-0 bottom-5 z-30 mx-auto flex w-[calc(100%-32px)] max-w-md items-center gap-3 rounded-xl border bg-popover py-2 pr-2 pl-4 shadow-(--shadow-float)"
           >
             <span className="flex-1 text-[13px]">有尚未保存的修改</span>
             <Button variant="ghost" size="sm" onClick={() => setDraft(data.values)}>
@@ -217,7 +217,7 @@ function Section({ title, desc, children }: { title: string; desc?: string; chil
     <section className="mt-9">
       <h2 className="text-[14px] font-semibold tracking-tight">{title}</h2>
       {desc && <p className="mt-0.5 text-[12.5px] text-muted-foreground">{desc}</p>}
-      <div className="mt-3 divide-y overflow-hidden rounded-2xl border bg-card shadow-(--shadow-card)">{children}</div>
+      <div className="mt-3 divide-y overflow-hidden rounded-2xl border bg-card">{children}</div>
     </section>
   )
 }

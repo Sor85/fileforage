@@ -61,7 +61,7 @@ export function LibraryPage() {
             已添加的目录会被持续监听，新增、修改与删除的文件自动同步到索引。
           </p>
         </div>
-        <Button onClick={() => setAdding(true)} className="rounded-xl">
+        <Button onClick={() => setAdding(true)}>
           <IconFolderPlus className="size-4" />
           添加目录
         </Button>
@@ -88,15 +88,15 @@ export function LibraryPage() {
             <CollectionCard key={c.id} c={c} index={i} progress={status?.indexer} onChanged={refresh} />
           ))
         ) : (
-          <div className="flex flex-col items-center rounded-3xl border border-dashed bg-card/50 px-6 py-16 text-center">
-            <span className="flex size-14 items-center justify-center rounded-2xl bg-brand/10 text-brand">
-              <IconFolderPlus className="size-7" stroke={1.6} />
+          <div className="flex flex-col items-center rounded-2xl border bg-card px-6 py-14 text-center">
+            <span className="flex size-12 items-center justify-center rounded-xl bg-muted text-muted-foreground">
+              <IconFolderPlus className="size-6" stroke={1.6} />
             </span>
             <p className="mt-4 text-[15px] font-medium">还没有添加任何目录</p>
             <p className="mt-1 max-w-sm text-[13px] text-muted-foreground">
               选择一个包含文档、照片、视频或录音的目录，FileForage 会在本机完成全部向量化。
             </p>
-            <Button className="mt-5 rounded-xl" onClick={() => setAdding(true)}>
+            <Button className="mt-5" onClick={() => setAdding(true)}>
               添加目录
             </Button>
           </div>
@@ -118,9 +118,9 @@ export function LibraryPage() {
 
 function Stat({ label, value, tone }: { label: string; value: string; tone?: "warn" }) {
   return (
-    <div className="rounded-2xl border bg-card px-4 py-3.5 shadow-(--shadow-card)">
+    <div className="rounded-xl border bg-card px-4 py-3">
       <p className="text-[12px] text-muted-foreground">{label}</p>
-      <p className={cn("mt-1 text-[22px] leading-tight font-semibold tracking-tight tabular-nums", tone === "warn" && "text-destructive")}>
+      <p className={cn("mt-0.5 text-[20px] leading-tight font-semibold tracking-tight tabular-nums", tone === "warn" && "text-destructive")}>
         {value}
       </p>
     </div>
@@ -147,14 +147,14 @@ function CollectionCard({
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay: index * 0.05, ease: [0.32, 0.72, 0, 1] }}
-      className="overflow-hidden rounded-2xl border bg-card shadow-(--shadow-card)"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.3, delay: index * 0.03 }}
+      className="overflow-hidden rounded-2xl border bg-card"
     >
       <div className="flex items-start gap-4 p-4 sm:p-5">
-        <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-kind-document/14 text-kind-document">
-          <IconFolder className="size-[22px]" stroke={1.7} />
+        <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-muted text-muted-foreground">
+          <IconFolder className="size-5" stroke={1.7} />
         </span>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
