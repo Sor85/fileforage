@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import logging
 import os
 import re
@@ -153,6 +154,21 @@ class CollectionIn(BaseModel):
     name: str | None = None
 
 
+class CollectionPatch(BaseModel):
+    excluded_kinds: list[str] | None = None
+
+
+def _collection_or_404(cid: int) -> Any:
+    row = S().db.collection(cid)
+    if row is None:
+        raise HTTPException(404, "目录不存在")
+    return row
+
+
+def _single_payload(cid: int) -> dict[str, Any]:
+    return _collection_payload(S().db.collection(cid), S().db.collection_stats())
+
+
 def _collection_payload(row: Any, stats: dict[int, dict[str, Any]]) -> dict[str, Any]:
     st = stats.get(row["id"], {"files": 0, "bytes": 0, "errors": 0, "pending": 0, "kinds": {}})
     return {
@@ -162,6 +178,8 @@ def _collection_payload(row: Any, stats: dict[int, dict[str, Any]]) -> dict[str,
         "created_at": row["created_at"],
         "last_scan_at": row["last_scan_at"],
         "last_error": row["last_error"],
+        "enabled": bool(row["enabled"]),
+        "excluded_kinds": json.loads(row["excluded_kinds"]),
         "exists": Path(row["path"]).is_dir(),
         **st,
     }
@@ -187,10 +205,34 @@ def add_collection(body: CollectionIn) -> dict[str, Any]:
         if p == other or p.is_relative_to(other) or other.is_relative_to(p):
             raise HTTPException(409, f"与已添加的目录「{c['name']}」重叠")
     cid = s.db.add_collection(str(p), (body.name or p.name or str(p)).strip())
+    return _single_payload(cid)
+
+
+@app.patch("/api/collections/{cid}")
+def update_collection(cid: int, body: CollectionPatch) -> dict[str, Any]:
+    s = S()
+    row = _collection_or_404(cid)
+    if body.excluded_kinds is not None:
+        excluded = sorted(set(body.excluded_kinds))
+        if not set(excluded) <= KINDS:
+            raise HTTPException(422, "未知的文件种类")
+        if set(excluded) == KINDS:
+            raise HTTPException(422, "至少保留一种文件种类")
+        s.db.update_collection(cid, excluded_kinds=excluded)
+        # 已在索引的目录立即按新范围重新扫描：移除被排除的文件，补上新纳入的文件
+        if row["enabled"] and excluded != json.loads(row["excluded_kinds"]):
+            s.indexer.enqueue(cid)
+    return _single_payload(cid)
+
+
+@app.post("/api/collections/{cid}/start")
+def start_collection(cid: int) -> dict[str, Any]:
+    s = S()
+    _collection_or_404(cid)
+    s.db.update_collection(cid, enabled=True)
     s.indexer.enqueue(cid)
     s.indexer.collections_changed()
-    stats = s.db.collection_stats()
-    return _collection_payload(s.db.collection(cid), stats)
+    return _single_payload(cid)
 
 
 @app.delete("/api/collections/{cid}")
@@ -212,8 +254,8 @@ def delete_collection(cid: int) -> dict[str, bool]:
 
 @app.post("/api/collections/{cid}/scan")
 def scan_collection(cid: int) -> dict[str, bool]:
-    if S().db.collection(cid) is None:
-        raise HTTPException(404, "目录不存在")
+    if not _collection_or_404(cid)["enabled"]:
+        raise HTTPException(409, "目录尚未开始索引")
     S().indexer.enqueue(cid)
     return {"ok": True}
 
@@ -221,8 +263,8 @@ def scan_collection(cid: int) -> dict[str, bool]:
 @app.post("/api/collections/{cid}/reindex")
 def reindex_collection(cid: int) -> dict[str, bool]:
     s = S()
-    if s.db.collection(cid) is None:
-        raise HTTPException(404, "目录不存在")
+    if not _collection_or_404(cid)["enabled"]:
+        raise HTTPException(409, "目录尚未开始索引")
     s.db.execute("UPDATE files SET status='pending' WHERE collection_id = ?", (cid,))
     s.indexer.enqueue(cid)
     return {"ok": True}

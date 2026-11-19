@@ -63,7 +63,7 @@ export function FolderPicker({
         </span>
       }
       title="添加目录"
-      description="目录中的文档、图片、视频与音频会被逐个向量化，之后的变化自动增量更新。"
+      description="目录中的文档、图片、视频与音频会被逐个向量化，之后的变化自动增量更新。添加后可在目录卡片中排除文件种类，再开始索引。"
       bodyClassName="space-y-4"
       footer={
         <>
@@ -88,7 +88,7 @@ export function FolderPicker({
             }}
           >
             {busy && <IconLoader2 className="size-4 animate-spin" />}
-            添加并开始索引
+            添加
           </Button>
         </>
       }

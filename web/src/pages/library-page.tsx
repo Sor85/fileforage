@@ -7,6 +7,8 @@ import {
   IconDots,
   IconFolder,
   IconFolderPlus,
+  IconLoader2,
+  IconPlayerPlay,
   IconRefresh,
   IconRotateClockwise2,
   IconTrash,
@@ -108,7 +110,7 @@ export function LibraryPage() {
         onOpenChange={setAdding}
         onConfirm={async (path, name) => {
           const c = await api.addCollection(path, name || undefined)
-          toast.success(`已添加「${c.name}」，开始建立索引`)
+          toast.success(`已添加「${c.name}」`, { description: "可在目录卡片中排除文件种类，再开始索引" })
           refresh()
         }}
       />
@@ -140,6 +142,7 @@ function CollectionCard({
 }) {
   const [confirm, setConfirm] = React.useState<"delete" | "reindex" | null>(null)
   const [showErrors, setShowErrors] = React.useState(false)
+  const [starting, setStarting] = React.useState(false)
   const active = progress && progress.collection_id === c.id && progress.phase !== "idle"
   const queued = progress?.queued.includes(c.id)
   const indexed = KINDS.reduce((n, k) => n + (c.kinds[k] ?? 0), 0)
@@ -169,31 +172,24 @@ function CollectionCard({
           <p className="mt-0.5 truncate font-mono text-[11.5px] text-muted-foreground" title={c.path}>
             {c.path}
           </p>
-          <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[12.5px]">
-            {KINDS.filter((k) => c.kinds[k]).map((k) => (
-              <span key={k} className="inline-flex items-center gap-1.5 text-muted-foreground">
-                <span className={cn("size-1.5 rounded-full bg-current", KIND_COLOR[k])} />
-                {KIND_LABEL[k]}
-                <span className="font-medium text-foreground tabular-nums">{formatNumber(c.kinds[k] ?? 0)}</span>
-              </span>
-            ))}
-            {indexed === 0 && !active && <span className="text-muted-foreground">尚无已索引文件</span>}
-          </div>
+          <KindScope c={c} onChanged={onChanged} />
         </div>
         <div className="flex shrink-0 items-center gap-1">
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            className="rounded-full"
-            aria-label={`重新扫描 ${c.name}`}
-            onClick={async () => {
-              await api.scanCollection(c.id)
-              toast("已开始扫描变化")
-              onChanged()
-            }}
-          >
-            <IconRefresh className="size-4" />
-          </Button>
+          {c.enabled && (
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              className="rounded-full"
+              aria-label={`重新扫描 ${c.name}`}
+              onClick={async () => {
+                await api.scanCollection(c.id)
+                toast("已开始扫描变化")
+                onChanged()
+              }}
+            >
+              <IconRefresh className="size-4" />
+            </Button>
+          )}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon-sm" className="rounded-full" aria-label={`${c.name} 的更多操作`}>
@@ -201,17 +197,19 @@ function CollectionCard({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-44">
-              <DropdownMenuItem onSelect={() => setConfirm("reindex")}>
-                <IconRotateClockwise2 className="size-4" />
-                重建全部索引
-              </DropdownMenuItem>
+              {c.enabled && (
+                <DropdownMenuItem onSelect={() => setConfirm("reindex")}>
+                  <IconRotateClockwise2 className="size-4" />
+                  重建全部索引
+                </DropdownMenuItem>
+              )}
               {c.errors > 0 && (
                 <DropdownMenuItem onSelect={() => setShowErrors(true)}>
                   <IconAlertTriangle className="size-4" />
                   查看失败文件
                 </DropdownMenuItem>
               )}
-              <DropdownMenuSeparator />
+              {(c.enabled || c.errors > 0) && <DropdownMenuSeparator />}
               <DropdownMenuItem variant="destructive" onSelect={() => setConfirm("delete")}>
                 <IconTrash className="size-4" />
                 移除目录
@@ -246,6 +244,30 @@ function CollectionCard({
               <div className="h-full w-1/3 animate-[indeterminate_1.4s_ease-in-out_infinite] rounded-full bg-linear-to-r from-brand/0 via-brand to-brand/0" />
             )}
           </div>
+        </div>
+      ) : !c.enabled ? (
+        <div className="flex items-center gap-3 border-t bg-muted/30 py-2 pr-2.5 pl-4 sm:pl-5">
+          <span className="min-w-0 flex-1 text-[12px] text-muted-foreground">尚未开始索引，点击上方的文件种类可将其排除</span>
+          <Button
+            size="sm"
+            className="shrink-0"
+            disabled={starting}
+            onClick={async () => {
+              setStarting(true)
+              try {
+                await api.startCollection(c.id)
+                toast(`已开始索引「${c.name}」`)
+                onChanged()
+              } catch (e) {
+                toast.error((e as Error).message)
+              } finally {
+                setStarting(false)
+              }
+            }}
+          >
+            {starting ? <IconLoader2 className="animate-spin" /> : <IconPlayerPlay />}
+            开始索引
+          </Button>
         </div>
       ) : (
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-t bg-muted/30 px-4 py-2.5 text-[12px] text-muted-foreground sm:px-5">
@@ -288,6 +310,86 @@ function CollectionCard({
       />
       <ErrorsModal open={showErrors} onOpenChange={setShowErrors} collection={c} />
     </motion.div>
+  )
+}
+
+/** 索引范围：点击文件种类在纳入与排除之间切换，至少保留一种。 */
+function KindScope({ c, onChanged }: { c: Collection; onChanged: () => void }) {
+  const qc = useQueryClient()
+  const [busy, setBusy] = React.useState(false)
+  const [confirmKind, setConfirmKind] = React.useState<Kind | null>(null)
+  const excluded = new Set(c.excluded_kinds)
+  const includedCount = KINDS.length - excluded.size
+
+  const save = async (next: Kind[]) => {
+    setBusy(true)
+    try {
+      const updated = await api.updateCollection(c.id, { excluded_kinds: next })
+      qc.setQueryData<Collection[]>(["collections"], (list) => list?.map((x) => (x.id === c.id ? updated : x)))
+      onChanged()
+    } catch (e) {
+      toast.error((e as Error).message)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const toggle = (k: Kind) => {
+    if (busy) return
+    if (excluded.has(k)) return void save(c.excluded_kinds.filter((x) => x !== k))
+    // 已索引过该种类时，排除会移除这些文件的索引，先确认
+    if (c.enabled && c.kinds[k]) return setConfirmKind(k)
+    void save([...c.excluded_kinds, k])
+  }
+
+  return (
+    <div className="mt-3 flex flex-wrap items-center gap-1.5">
+      <span className="mr-1 text-[12px] text-muted-foreground">索引范围</span>
+      {KINDS.map((k) => {
+        const off = excluded.has(k)
+        const last = !off && includedCount === 1
+        return (
+          <button
+            key={k}
+            type="button"
+            aria-pressed={!off}
+            disabled={last}
+            title={last ? "至少保留一种文件种类" : off ? `纳入${KIND_LABEL[k]}` : `排除${KIND_LABEL[k]}`}
+            onClick={() => toggle(k)}
+            className={cn(
+              "inline-flex h-7 items-center gap-1.5 rounded-full border px-2.5 text-[12.5px] outline-none transition-colors hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/40 disabled:opacity-60 disabled:hover:bg-transparent",
+              off ? "border-dashed text-muted-foreground/70" : "text-muted-foreground"
+            )}
+          >
+            <span
+              className={cn(
+                "size-1.5 rounded-full",
+                off ? "border border-current" : cn("bg-current", KIND_COLOR[k])
+              )}
+            />
+            <span className={cn(off && "line-through decoration-muted-foreground/50")}>{KIND_LABEL[k]}</span>
+            {!off && c.enabled && !!c.kinds[k] && (
+              <span className="font-medium text-foreground tabular-nums">{formatNumber(c.kinds[k] ?? 0)}</span>
+            )}
+          </button>
+        )
+      })}
+      <ConfirmDialog
+        open={confirmKind !== null}
+        onOpenChange={(o) => !o && setConfirmKind(null)}
+        title={confirmKind ? `排除${KIND_LABEL[confirmKind]}？` : ""}
+        description={
+          confirmKind
+            ? `「${c.name}」中已索引的 ${formatNumber(c.kinds[confirmKind] ?? 0)} 个${KIND_LABEL[confirmKind]}文件会从索引中移除，原始文件不受影响。重新纳入后需要再次向量化。`
+            : ""
+        }
+        confirmText="排除"
+        destructive
+        onConfirm={async () => {
+          if (confirmKind) await save([...c.excluded_kinds, confirmKind])
+        }}
+      />
+    </div>
   )
 }
 

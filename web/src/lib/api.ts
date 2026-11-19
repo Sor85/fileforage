@@ -105,6 +105,9 @@ export type Collection = {
   created_at: number
   last_scan_at: number | null
   last_error: string | null
+  /** 新添加的目录在用户点击“开始索引”前为 false */
+  enabled: boolean
+  excluded_kinds: Kind[]
   exists: boolean
   files: number
   bytes: number
@@ -188,6 +191,9 @@ export const api = {
   file: (id: number) => request<FileDetail>(`/api/files/${id}`),
   collections: () => request<Collection[]>("/api/collections"),
   addCollection: (path: string, name?: string) => request<Collection>("/api/collections", json("POST", { path, name })),
+  updateCollection: (id: number, body: { excluded_kinds?: Kind[] }) =>
+    request<Collection>(`/api/collections/${id}`, json("PATCH", body)),
+  startCollection: (id: number) => request<Collection>(`/api/collections/${id}/start`, json("POST")),
   deleteCollection: (id: number) => request<{ ok: boolean }>(`/api/collections/${id}`, json("DELETE")),
   scanCollection: (id: number) => request<{ ok: boolean }>(`/api/collections/${id}/scan`, json("POST")),
   reindexCollection: (id: number) => request<{ ok: boolean }>(`/api/collections/${id}/reindex`, json("POST")),

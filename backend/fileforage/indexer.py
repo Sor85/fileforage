@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import logging
 import os
 import shutil
@@ -78,7 +79,8 @@ class Indexer:
 
     def enqueue_all(self) -> None:
         for c in self.s.db.collections():
-            self.enqueue(c["id"])
+            if c["enabled"]:
+                self.enqueue(c["id"])
 
     def cancel(self, cid: int | None = None) -> None:
         with self._cond:
@@ -134,7 +136,7 @@ class Indexer:
 
     def _run_collection(self, cid: int) -> None:
         coll = self.s.db.collection(cid)
-        if coll is None:
+        if coll is None or not coll["enabled"]:
             return
         root = Path(coll["path"])
         p = self.progress
@@ -144,7 +146,7 @@ class Indexer:
             return
 
         p.phase = "scanning"
-        pending = self._scan(cid, root)
+        pending = self._scan(cid, root, set(json.loads(coll["excluded_kinds"])))
         self.s.db.execute(
             "UPDATE collections SET last_scan_at=?, last_error=NULL WHERE id=?", (time.time(), cid)
         )
@@ -181,7 +183,7 @@ class Indexer:
 
     # ---- 扫描 -----------------------------------------------------------
 
-    def _scan(self, cid: int, root: Path) -> list[int]:
+    def _scan(self, cid: int, root: Path, excluded_kinds: set[str]) -> list[int]:
         st = self.s.settings
         known = self.s.db.files_snapshot(cid)
         seen: set[str] = set()
@@ -213,6 +215,9 @@ class Indexer:
                 if cls is None or info.st_size == 0:
                     continue
                 kind, ext = cls
+                # 被排除的模态不计入 seen，已索引的同类文件随后按“已删除”移除
+                if kind in excluded_kinds:
+                    continue
                 if kind in ("text", "document") and info.st_size > st.max_text_mb * 1024 * 1024:
                     continue
                 key = str(path)
@@ -419,7 +424,11 @@ class Indexer:
 
         while not self._stop.is_set():
             self._watch_reload.clear()
-            colls = {c["id"]: Path(c["path"]) for c in self.s.db.collections() if Path(c["path"]).is_dir()}
+            colls = {
+                c["id"]: Path(c["path"])
+                for c in self.s.db.collections()
+                if c["enabled"] and Path(c["path"]).is_dir()
+            }
             if not self.s.settings.watch or not colls:
                 self._watch_reload.wait(timeout=10)
                 continue

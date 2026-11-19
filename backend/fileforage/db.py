@@ -20,7 +20,9 @@ CREATE TABLE IF NOT EXISTS collections (
     name TEXT NOT NULL,
     created_at REAL NOT NULL,
     last_scan_at REAL,
-    last_error TEXT
+    last_error TEXT,
+    enabled INTEGER NOT NULL DEFAULT 1,
+    excluded_kinds TEXT NOT NULL DEFAULT '[]'
 );
 CREATE TABLE IF NOT EXISTS files (
     id INTEGER PRIMARY KEY,
@@ -69,6 +71,15 @@ class Database:
             self._conn.execute("PRAGMA foreign_keys=ON")
             self._conn.execute("PRAGMA synchronous=NORMAL")
             self._conn.executescript(SCHEMA)
+            self._migrate()
+
+    def _migrate(self) -> None:
+        cols = {r["name"] for r in self._conn.execute("PRAGMA table_info(collections)")}
+        # 旧库的目录都已在索引，enabled 默认 1
+        if "enabled" not in cols:
+            self._conn.execute("ALTER TABLE collections ADD COLUMN enabled INTEGER NOT NULL DEFAULT 1")
+        if "excluded_kinds" not in cols:
+            self._conn.execute("ALTER TABLE collections ADD COLUMN excluded_kinds TEXT NOT NULL DEFAULT '[]'")
 
     @contextmanager
     def tx(self) -> Iterator[sqlite3.Connection]:
@@ -96,10 +107,22 @@ class Database:
     # ---- collections -------------------------------------------------
 
     def add_collection(self, path: str, name: str) -> int:
+        """新目录默认未启用，由用户确认索引范围后再开始索引。"""
         cur = self.execute(
-            "INSERT INTO collections(path, name, created_at) VALUES (?, ?, ?)", (path, name, time.time())
+            "INSERT INTO collections(path, name, created_at, enabled) VALUES (?, ?, ?, 0)",
+            (path, name, time.time()),
         )
         return int(cur.lastrowid or 0)
+
+    def update_collection(
+        self, cid: int, *, enabled: bool | None = None, excluded_kinds: list[str] | None = None
+    ) -> None:
+        if enabled is not None:
+            self.execute("UPDATE collections SET enabled=? WHERE id=?", (int(enabled), cid))
+        if excluded_kinds is not None:
+            self.execute(
+                "UPDATE collections SET excluded_kinds=? WHERE id=?", (json.dumps(sorted(excluded_kinds)), cid)
+            )
 
     def collections(self) -> list[sqlite3.Row]:
         return self.query("SELECT * FROM collections ORDER BY created_at")
