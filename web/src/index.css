@@ -68,6 +68,7 @@
   --ring: oklch(0.6 0.16 278);
   --brand: oklch(0.56 0.2 280);
   --brand-2: oklch(0.7 0.16 35);
+  --brand-dot: oklch(0.76 0.15 70);
   --kind-text: oklch(0.56 0.17 290);
   --kind-document: oklch(0.66 0.15 65);
   --kind-image: oklch(0.6 0.14 225);
@@ -100,6 +101,7 @@
   --ring: oklch(0.68 0.15 280);
   --brand: oklch(0.72 0.15 282);
   --brand-2: oklch(0.76 0.13 40);
+  --brand-dot: oklch(0.86 0.13 78);
   --kind-text: oklch(0.74 0.13 292);
   --kind-document: oklch(0.8 0.13 75);
   --kind-image: oklch(0.76 0.11 225);
