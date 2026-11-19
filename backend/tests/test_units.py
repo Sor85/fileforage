@@ -78,6 +78,38 @@ def test_vector_index_search_filter_remove():
     assert len(idx) == 2
 
 
+def test_vector_index_growth_tombstones_and_compaction():
+    rng = np.random.default_rng(0)
+    idx = VectorIndex(dim=8)
+    ref: dict[int, np.ndarray] = {}  # file_id -> 向量，作为对照
+    next_chunk = 0
+    for round_ in range(6):
+        for fid in range(round_ * 1000, round_ * 1000 + 1500):
+            v = rng.standard_normal(8).astype(np.float32)
+            if fid in ref:  # 与索引器一致：重新索引前先移除旧分块
+                idx.remove_files({fid})
+            idx.add(
+                np.array([next_chunk]), np.array([fid]), v[None], np.array([0]), np.array([0]), np.zeros(1)
+            )
+            ref[fid] = v
+            next_chunk += 1
+        gone = set(range(round_ * 1000, round_ * 1000 + 700))
+        idx.remove_files(gone)
+        for f in gone:
+            ref.pop(f, None)
+        assert len(idx) == len(ref)
+    fids = sorted(ref)
+    mat = np.stack([ref[f] for f in fids])
+    q = rng.standard_normal(8).astype(np.float32)
+    hits = idx.search(q, top=20, use_bias=False)
+    expect = [fids[i] for i in np.argsort(-(mat @ q))[:20]]
+    assert hits.file_ids.tolist() == expect
+    assert np.isfinite(hits.scores).all()
+    # 筛选后没有命中时返回空结果；结果数不超过有效分块数
+    assert len(idx.search(q, kinds=["image"]).file_ids) == 0
+    assert len(idx.search(q, top=10_000).file_ids) == len(ref)
+
+
 def test_chunk_bias_favors_visual_and_penalizes_names():
     b = chunk_bias(["text", "image", "name"])
     assert b[1] > b[0] > b[2]
