@@ -66,8 +66,13 @@ class AppState:
         merged = Settings.model_validate(merged.model_dump())
         self.db.put_settings(merged.model_dump())
         watch_changed = merged.watch != self.settings.watch
+        scope_keys = ("excludes", "exclude_presets", "include_hidden")
+        scope_changed = any(getattr(merged, k) != getattr(self.settings, k) for k in scope_keys)
         self.settings = merged
         self.embedder.set_image_tokens(merged.image_tokens)
         if watch_changed:
             self.indexer.collections_changed()
+        # 排除范围变化后重新扫描，移除新排除的文件、补上不再排除的文件
+        if scope_changed:
+            self.indexer.enqueue_all()
         return merged

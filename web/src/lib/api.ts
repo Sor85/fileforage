@@ -133,12 +133,16 @@ export type SettingsValues = {
   min_image_px: number
   include_hidden: boolean
   excludes: string[]
+  exclude_presets: string[]
   watch: boolean
   min_score: number
 }
 
+export type ExcludePreset = { key: string; label: string; exts: string[] }
+
 export type SettingsResponse = {
   values: SettingsValues
+  exclude_presets: ExcludePreset[]
   env: { model: string; device: string; roots: string[]; data_dir: string; modalities: string[] }
 }
 
@@ -194,6 +198,7 @@ export const api = {
   updateCollection: (id: number, body: { excluded_kinds?: Kind[] }) =>
     request<Collection>(`/api/collections/${id}`, json("PATCH", body)),
   startCollection: (id: number) => request<Collection>(`/api/collections/${id}/start`, json("POST")),
+  stopCollection: (id: number) => request<Collection>(`/api/collections/${id}/stop`, json("POST")),
   deleteCollection: (id: number) => request<{ ok: boolean }>(`/api/collections/${id}`, json("DELETE")),
   scanCollection: (id: number) => request<{ ok: boolean }>(`/api/collections/${id}/scan`, json("POST")),
   reindexCollection: (id: number) => request<{ ok: boolean }>(`/api/collections/${id}/reindex`, json("POST")),

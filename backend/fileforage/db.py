@@ -121,7 +121,8 @@ class Database:
             self.execute("UPDATE collections SET enabled=? WHERE id=?", (int(enabled), cid))
         if excluded_kinds is not None:
             self.execute(
-                "UPDATE collections SET excluded_kinds=? WHERE id=?", (json.dumps(sorted(excluded_kinds)), cid)
+                "UPDATE collections SET excluded_kinds=? WHERE id=?",
+                (json.dumps(sorted(excluded_kinds)), cid),
             )
 
     def collections(self) -> list[sqlite3.Row]:

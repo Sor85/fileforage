@@ -4,7 +4,9 @@ from __future__ import annotations
 
 from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
+
+from .extractors import EXCLUDE_PRESETS
 
 DEFAULT_EXCLUDES = [
     "node_modules",
@@ -49,8 +51,17 @@ class Settings(BaseModel):
     min_image_px: int = Field(96, ge=0, description="宽高都小于该值的图片视为图标并跳过")
     include_hidden: bool = Field(False, description="是否索引以 . 开头的隐藏文件与目录")
     excludes: list[str] = Field(default_factory=lambda: list(DEFAULT_EXCLUDES))
+    exclude_presets: list[str] = Field(default_factory=list, description="按扩展名整组排除的常用预设")
     watch: bool = Field(True, description="监听目录变化并自动增量索引")
     min_score: float = Field(0.58, ge=0, le=1, description="低于该相似度的结果不显示")
+
+    @field_validator("exclude_presets")
+    @classmethod
+    def _known_presets(cls, v: list[str]) -> list[str]:
+        unknown = [k for k in v if k not in EXCLUDE_PRESETS]
+        if unknown:
+            raise ValueError(f"未知的排除预设：{', '.join(unknown)}")
+        return [k for k in EXCLUDE_PRESETS if k in v]
 
 
 def load_settings(stored: dict[str, Any]) -> Settings:

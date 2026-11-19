@@ -40,6 +40,27 @@ VIDEO_EXT = {
     "mpeg",
     "ogv",
 }
+# 设置页“常用排除项”：按扩展名整组跳过，键存于 Settings.exclude_presets
+EXCLUDE_PRESETS: dict[str, tuple[str, set[str]]] = {
+    "code": ("代码", {
+        "py", "pyi", "ipynb", "js", "mjs", "cjs", "jsx", "ts", "tsx", "java", "kt", "kts", "scala", "groovy",
+        "go", "rs", "c", "h", "cc", "cpp", "cxx", "hpp", "hh", "cs", "fs", "vb", "rb", "php", "swift", "m", "mm",
+        "dart", "lua", "r", "jl", "pl", "pm", "sh", "bash", "zsh", "fish", "ps1", "bat", "cmd", "sql", "graphql",
+        "gql", "proto", "zig", "nim", "ex", "exs", "erl", "hs", "ml", "clj", "elm", "sol", "tf", "hcl", "nix",
+        "cmake", "gradle", "dockerfile", "makefile",
+    }),
+    "web": ("网页与样式", {"html", "htm", "css", "scss", "sass", "less", "styl", "vue", "svelte", "astro"}),
+    "data": ("配置与数据", {
+        "xml", "json", "jsonl", "yaml", "yml", "toml", "ini", "cfg", "conf", "csv", "tsv",
+    }),
+    "log": ("日志", {"log"}),
+}  # fmt: skip
+
+
+def preset_exts(keys: list[str]) -> set[str]:
+    return set().union(*(EXCLUDE_PRESETS[k][1] for k in keys if k in EXCLUDE_PRESETS))
+
+
 SPECIAL_NAMES = {"dockerfile": "dockerfile", "makefile": "makefile", "readme": "txt", "license": "txt"}
 
 CHUNK_CHARS = 1000

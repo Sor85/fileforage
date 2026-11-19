@@ -8,7 +8,9 @@ import {
   IconFolder,
   IconFolderPlus,
   IconLoader2,
+  IconPlayerPause,
   IconPlayerPlay,
+  IconPlayerStop,
   IconRefresh,
   IconRotateClockwise2,
   IconTrash,
@@ -143,6 +145,16 @@ function CollectionCard({
   const [confirm, setConfirm] = React.useState<"delete" | "reindex" | null>(null)
   const [showErrors, setShowErrors] = React.useState(false)
   const [starting, setStarting] = React.useState(false)
+
+  const stop = async () => {
+    try {
+      await api.stopCollection(c.id)
+      toast(`已取消索引「${c.name}」`, { description: "已完成的文件仍可检索，之后可继续索引" })
+      onChanged()
+    } catch (e) {
+      toast.error((e as Error).message)
+    }
+  }
   const active = progress && progress.collection_id === c.id && progress.phase !== "idle"
   const queued = progress?.queued.includes(c.id)
   const indexed = KINDS.reduce((n, k) => n + (c.kinds[k] ?? 0), 0)
@@ -203,6 +215,12 @@ function CollectionCard({
                   重建全部索引
                 </DropdownMenuItem>
               )}
+              {(active || queued) && (
+                <DropdownMenuItem onSelect={() => void stop()}>
+                  <IconPlayerStop className="size-4" />
+                  取消索引
+                </DropdownMenuItem>
+              )}
               {c.errors > 0 && (
                 <DropdownMenuItem onSelect={() => setShowErrors(true)}>
                   <IconAlertTriangle className="size-4" />
@@ -233,6 +251,24 @@ function CollectionCard({
               )}
               {progress.paused && " · 已暂停"}
             </span>
+            <div className="-my-1 -mr-1.5 flex shrink-0 items-center">
+              <Button
+                variant="ghost"
+                size="xs"
+                className="text-muted-foreground hover:text-foreground"
+                onClick={async () => {
+                  await api.indexer(progress.paused ? "resume" : "pause")
+                  onChanged()
+                }}
+              >
+                {progress.paused ? <IconPlayerPlay /> : <IconPlayerPause />}
+                {progress.paused ? "继续" : "暂停"}
+              </Button>
+              <Button variant="ghost" size="xs" className="text-muted-foreground hover:text-foreground" onClick={() => void stop()}>
+                <IconPlayerStop />
+                取消
+              </Button>
+            </div>
           </div>
           <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted">
             {progress.phase === "indexing" ? (
@@ -247,7 +283,11 @@ function CollectionCard({
         </div>
       ) : !c.enabled ? (
         <div className="flex items-center gap-3 border-t bg-muted/30 py-2 pr-2.5 pl-4 sm:pl-5">
-          <span className="min-w-0 flex-1 text-[12px] text-muted-foreground">尚未开始索引，点击上方的文件种类可将其排除</span>
+          <span className="min-w-0 flex-1 text-[12px] text-muted-foreground">
+            {indexed > 0
+              ? `索引已取消，已完成的 ${formatNumber(indexed)} 个文件仍可检索`
+              : "尚未开始索引，点击上方的文件种类可将其排除"}
+          </span>
           <Button
             size="sm"
             className="shrink-0"
@@ -266,7 +306,7 @@ function CollectionCard({
             }}
           >
             {starting ? <IconLoader2 className="animate-spin" /> : <IconPlayerPlay />}
-            开始索引
+            {indexed > 0 ? "继续索引" : "开始索引"}
           </Button>
         </div>
       ) : (
@@ -368,7 +408,7 @@ function KindScope({ c, onChanged }: { c: Collection; onChanged: () => void }) {
               )}
             />
             <span className={cn(off && "line-through decoration-muted-foreground/50")}>{KIND_LABEL[k]}</span>
-            {!off && c.enabled && !!c.kinds[k] && (
+            {!off && !!c.kinds[k] && (
               <span className="font-medium text-foreground tabular-nums">{formatNumber(c.kinds[k] ?? 0)}</span>
             )}
           </button>

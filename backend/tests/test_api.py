@@ -70,6 +70,27 @@ def test_excluded_kinds(client, library):
     assert client.patch(f"/api/collections/{cid}", json={"excluded_kinds": ["exe"]}).status_code == 422
 
 
+def test_exclude_presets_and_stop(client, library):
+    cid = client.post("/api/collections", json={"path": str(library)}).json()["id"]
+    client.put("/api/settings", json={"exclude_presets": ["code"]})
+    client.post(f"/api/collections/{cid}/start")
+    time.sleep(0.3)
+    # fib.py 属于“代码”预设，被跳过
+    assert wait_idle(client)["stats"]["indexed"] == 1
+
+    # 取消预设后自动重新扫描补上
+    client.put("/api/settings", json={"exclude_presets": []})
+    time.sleep(0.3)
+    assert wait_idle(client)["stats"]["indexed"] == 2
+    assert client.put("/api/settings", json={"exclude_presets": ["nope"]}).status_code == 422
+    assert {p["key"] for p in client.get("/api/settings").json()["exclude_presets"]} >= {"code", "data"}
+
+    # 取消索引：回到未开始，已索引结果保留
+    r = client.post(f"/api/collections/{cid}/stop").json()
+    assert r["enabled"] is False and sum(r["kinds"].values()) == 2
+    assert client.post(f"/api/collections/{cid}/scan").status_code == 409
+
+
 def test_fs_listing_is_confined_to_roots(client, tmp_path):
     roots = client.get("/api/fs").json()
     assert roots["entries"][0]["path"] == str(tmp_path.resolve())

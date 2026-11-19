@@ -2,7 +2,7 @@ import * as React from "react"
 import { AnimatePresence, motion } from "motion/react"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner"
-import { IconCpu, IconLoader2, IconPlus, IconX } from "@tabler/icons-react"
+import { IconCheck, IconCpu, IconLoader2, IconPlus, IconX } from "@tabler/icons-react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -10,8 +10,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Skeleton } from "@/components/ui/skeleton"
 import { Slider } from "@/components/ui/slider"
 import { Switch } from "@/components/ui/switch"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { useStatus } from "@/hooks/use-status"
-import { api, type SettingsValues } from "@/lib/api"
+import { api, type ExcludePreset, type SettingsValues } from "@/lib/api"
 import { cn } from "@/lib/utils"
 
 const WHISPER = ["tiny", "base", "small", "medium", "large-v3", "large-v3-turbo"]
@@ -34,12 +35,14 @@ export function SettingsPage() {
   const save = async () => {
     if (!draft) return
     setSaving(true)
+    const scopeKeys = ["excludes", "exclude_presets", "include_hidden"] as const
+    const rescan = !!data && scopeKeys.some((k) => JSON.stringify(data.values[k]) !== JSON.stringify(draft[k]))
     try {
       const res = await api.saveSettings(draft)
       qc.setQueryData(["settings"], res)
       setDraft(res.values)
       void qc.invalidateQueries({ queryKey: ["search"] })
-      toast.success("设置已保存，新设置对之后索引的文件生效")
+      toast.success(rescan ? "设置已保存，已按新的排除范围重新扫描目录" : "设置已保存，新设置对之后索引的文件生效")
     } catch (e) {
       toast.error((e as Error).message)
     } finally {
@@ -145,7 +148,14 @@ export function SettingsPage() {
         </Row>
         <div className="border-t px-4 py-3.5">
           <p className="text-[13px] font-medium">排除规则</p>
-          <p className="mt-0.5 text-[12px] text-muted-foreground">匹配文件名或目录名，支持 * 与 ? 通配符</p>
+          <p className="mt-0.5 text-[12px] text-muted-foreground">
+            匹配文件名或目录名，支持 * 与 ? 通配符；常用项按扩展名整组排除
+          </p>
+          <PresetToggles
+            presets={data.exclude_presets}
+            values={draft.exclude_presets}
+            onChange={(v) => set("exclude_presets", v)}
+          />
           <TagEditor values={draft.excludes} onChange={(v) => set("excludes", v)} />
         </div>
       </Section>
@@ -264,6 +274,47 @@ function NumberField({
         className="h-8 w-20 text-right tabular-nums"
       />
       <span className="w-6 text-[12px] text-muted-foreground">{unit}</span>
+    </div>
+  )
+}
+
+function PresetToggles({
+  presets,
+  values,
+  onChange,
+}: {
+  presets: ExcludePreset[]
+  values: string[]
+  onChange: (v: string[]) => void
+}) {
+  return (
+    <div className="mt-3 flex flex-wrap items-center gap-1.5">
+      <span className="mr-1 text-[12px] text-muted-foreground">常用</span>
+      {presets.map((p) => {
+        const on = values.includes(p.key)
+        const Icon = on ? IconCheck : IconPlus
+        return (
+          <Tooltip key={p.key}>
+            <TooltipTrigger asChild>
+              <button
+                type="button"
+                aria-pressed={on}
+                onClick={() => onChange(on ? values.filter((k) => k !== p.key) : [...values, p.key])}
+                className={cn(
+                  "inline-flex h-7 items-center gap-1 rounded-full border pr-2.5 pl-2 text-[12.5px] outline-none transition-colors focus-visible:ring-3 focus-visible:ring-ring/40",
+                  on ? "border-brand/40 bg-brand/8 text-foreground hover:bg-brand/12" : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                )}
+              >
+                <Icon className={cn("size-3.5", on && "text-brand")} />
+                {p.label}
+              </button>
+            </TooltipTrigger>
+            <TooltipContent className="max-w-80 font-mono text-[11px] leading-4">
+              {p.exts.map((e) => `.${e}`).join(" ")}
+            </TooltipContent>
+          </Tooltip>
+        )
+      })}
     </div>
   )
 }

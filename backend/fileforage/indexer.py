@@ -83,6 +83,7 @@ class Indexer:
                 self.enqueue(c["id"])
 
     def cancel(self, cid: int | None = None) -> None:
+        """取消排队或正在运行的目录（cid 为空时取消全部）。取消正在运行的目录同时解除暂停。"""
         with self._cond:
             if cid is None:
                 self._queue.clear()
@@ -91,7 +92,7 @@ class Indexer:
             self.progress.queued = list(self._queue)
         if cid is None or self.progress.collection_id == cid:
             self._cancel.set()
-            self._resume.set()
+            self.pause(False)
 
     def pause(self, paused: bool) -> None:
         self.progress.paused = paused
@@ -185,6 +186,7 @@ class Indexer:
 
     def _scan(self, cid: int, root: Path, excluded_kinds: set[str]) -> list[int]:
         st = self.s.settings
+        skip_exts = extractors.preset_exts(st.exclude_presets)
         known = self.s.db.files_snapshot(cid)
         seen: set[str] = set()
         pending: list[int] = []
@@ -215,6 +217,8 @@ class Indexer:
                 if cls is None or info.st_size == 0:
                     continue
                 kind, ext = cls
+                if ext in skip_exts:
+                    continue
                 # 被排除的模态不计入 seen，已索引的同类文件随后按“已删除”移除
                 if kind in excluded_kinds:
                     continue

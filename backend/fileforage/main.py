@@ -21,7 +21,7 @@ from pydantic import BaseModel
 from . import __version__, media
 from .app_state import AppState
 from .config import load_config
-from .extractors import read_text_file
+from .extractors import EXCLUDE_PRESETS, read_text_file
 from .search import chunk_payload, file_payload, file_query_vector, run_search
 
 log = logging.getLogger("fileforage")
@@ -252,6 +252,17 @@ def delete_collection(cid: int) -> dict[str, bool]:
     return {"ok": True}
 
 
+@app.post("/api/collections/{cid}/stop")
+def stop_collection(cid: int) -> dict[str, Any]:
+    """取消索引：目录回到未开始状态，不再监听；已完成的文件保留可检索。"""
+    s = S()
+    _collection_or_404(cid)
+    s.db.update_collection(cid, enabled=False)
+    s.indexer.cancel(cid)
+    s.indexer.collections_changed()
+    return _single_payload(cid)
+
+
 @app.post("/api/collections/{cid}/scan")
 def scan_collection(cid: int) -> dict[str, bool]:
     if not _collection_or_404(cid)["enabled"]:
@@ -476,6 +487,9 @@ def get_settings() -> dict[str, Any]:
     s = S()
     return {
         "values": s.settings.model_dump(),
+        "exclude_presets": [
+            {"key": k, "label": label, "exts": sorted(exts)} for k, (label, exts) in EXCLUDE_PRESETS.items()
+        ],
         "env": {
             "model": s.config.model,
             "device": s.config.device,
