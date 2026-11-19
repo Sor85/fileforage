@@ -289,6 +289,19 @@ def collection_errors(cid: int) -> list[dict[str, Any]]:
     return [file_payload(r) for r in rows]
 
 
+@app.post("/api/collections/{cid}/retry")
+def retry_collection_errors(cid: int) -> dict[str, Any]:
+    """失败文件默认只在变化后重试；解析逻辑修复后由用户手动触发重新处理。"""
+    s = S()
+    if not _collection_or_404(cid)["enabled"]:
+        raise HTTPException(409, "目录尚未开始索引")
+    cur = s.db.execute(
+        "UPDATE files SET status='pending', error=NULL WHERE collection_id = ? AND status = 'error'", (cid,)
+    )
+    s.indexer.enqueue(cid)
+    return {"ok": True, "count": cur.rowcount}
+
+
 class IndexerAction(BaseModel):
     action: str  # pause | resume | cancel
 

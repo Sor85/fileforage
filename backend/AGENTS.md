@@ -17,7 +17,8 @@
 
 ## 索引
 
-- 增量依据为 (size, mtime)；失败的文件只在变化后重试。新增目录不得与已有目录嵌套（`files.path` 唯一）。
+- 增量依据为 (size, mtime)；失败的文件只在变化后自动重试，解析逻辑修复后由用户通过 `/retry` 手动重试（失败文件弹窗中的按钮）。新增目录不得与已有目录嵌套（`files.path` 唯一）。
+- `extractors.read_text_file` 先按 BOM、再按 00 字节的奇偶分布识别 UTF-16/32，之后才判定二进制：无 BOM 的 UTF-16 文本里 ASCII 字符本身就带 00。
 - 新增目录默认 `enabled=0`：不扫描、不监听，等用户在卡片上设好排除的文件种类（`excluded_kinds`）后调用 `/start` 才开始索引；迁移前已有的目录视为已启用。
 - 被排除种类的文件在扫描时不计入，已索引的同类文件按“已删除”移除；修改已启用目录的排除范围会立即重新扫描。
 - 全局排除有两层：`Settings.excludes`（文件名/目录名通配）与 `Settings.exclude_presets`（`extractors.EXCLUDE_PRESETS` 中按扩展名整组排除）。这两项或 `include_hidden` 变化后对所有已启用目录重新扫描（`AppState.update_settings`）。

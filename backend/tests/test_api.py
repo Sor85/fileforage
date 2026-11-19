@@ -91,6 +91,28 @@ def test_exclude_presets_and_stop(client, library):
     assert client.post(f"/api/collections/{cid}/scan").status_code == 409
 
 
+def test_retry_failed_files(client, library, monkeypatch):
+    (library / "blob.txt").write_bytes(bytes(range(256)) * 40)
+    cid = client.post("/api/collections", json={"path": str(library)}).json()["id"]
+    assert client.post(f"/api/collections/{cid}/retry").status_code == 409
+    client.post(f"/api/collections/{cid}/start")
+    time.sleep(0.3)
+    s = wait_idle(client)
+    assert s["stats"]["errors"] == 1 and s["stats"]["indexed"] == 2
+
+    # 未变化的失败文件扫描时不会重试，修复解析逻辑后需手动重试
+    from fileforage import extractors
+
+    monkeypatch.setattr(extractors, "read_text_file", lambda p: "修复后可读取的文本")
+    client.post(f"/api/collections/{cid}/scan")
+    time.sleep(0.3)
+    assert wait_idle(client)["stats"]["errors"] == 1
+    assert client.post(f"/api/collections/{cid}/retry").json()["count"] == 1
+    time.sleep(0.3)
+    s = wait_idle(client)
+    assert s["stats"]["errors"] == 0 and s["stats"]["indexed"] == 3
+
+
 def test_fs_listing_is_confined_to_roots(client, tmp_path):
     roots = client.get("/api/fs").json()
     assert roots["entries"][0]["path"] == str(tmp_path.resolve())

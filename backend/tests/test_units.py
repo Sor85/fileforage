@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import numpy as np
+import pytest
 
 from fileforage import extractors
 from fileforage.vindex import KIND_CODES, VectorIndex, chunk_bias
@@ -21,6 +22,31 @@ def test_excludes():
     assert extractors.is_excluded(".git", pats, False)
     assert not extractors.is_excluded(".config", [], True)
     assert extractors.is_excluded("~$doc.docx", [], True)
+
+
+def test_read_text_file_encodings(tmp_path):
+    text = '<?xml version="1.0"?>\n<config name="存档">\n  <item value="42"/>\n</config>\n'
+    cases = {
+        "utf16le.xml": text.encode("utf-16-le"),
+        "utf16be.xml": text.encode("utf-16-be"),
+        "utf16bom.xml": text.encode("utf-16"),
+        "utf32bom.txt": text.encode("utf-32"),
+        "utf8bom.txt": text.encode("utf-8-sig"),
+        "odd.txt": text.encode("utf-16-le") + b"\x0a",  # 截断的末尾半个字符
+    }
+    for name, data in cases.items():
+        p = tmp_path / name
+        p.write_bytes(data)
+        assert extractors.read_text_file(p) == text, name
+
+    binary = tmp_path / "blob.txt"
+    binary.write_bytes(bytes(range(256)) * 40)
+    with pytest.raises(ValueError, match="二进制"):
+        extractors.read_text_file(binary)
+    zeros = tmp_path / "zeros.log"
+    zeros.write_bytes(b"A\x00" * 100 + b"\x00\x00" * 200)
+    with pytest.raises(ValueError, match="二进制"):
+        extractors.read_text_file(zeros)
 
 
 def test_split_text_overlap_and_limits():

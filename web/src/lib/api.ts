@@ -203,6 +203,8 @@ export const api = {
   scanCollection: (id: number) => request<{ ok: boolean }>(`/api/collections/${id}/scan`, json("POST")),
   reindexCollection: (id: number) => request<{ ok: boolean }>(`/api/collections/${id}/reindex`, json("POST")),
   collectionErrors: (id: number) => request<FileInfo[]>(`/api/collections/${id}/errors`),
+  retryCollectionErrors: (id: number) =>
+    request<{ ok: boolean; count: number }>(`/api/collections/${id}/retry`, json("POST")),
   indexer: (action: "pause" | "resume" | "cancel") => request<Progress>("/api/indexer", json("POST", { action })),
   fs: (path?: string | null) => request<FsListing>(`/api/fs${qs({ path })}`),
   settings: () => request<SettingsResponse>("/api/settings"),

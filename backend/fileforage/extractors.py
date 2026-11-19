@@ -103,10 +103,48 @@ class TextExtraction:
     meta: dict[str, Any] = field(default_factory=dict)
 
 
+# 先比较长的 BOM：UTF-32 LE 的 BOM 以 UTF-16 LE 的 BOM 开头
+_BOMS = (
+    (b"\xef\xbb\xbf", "utf-8-sig"),
+    (b"\xff\xfe\x00\x00", "utf-32"),
+    (b"\x00\x00\xfe\xff", "utf-32"),
+    (b"\xff\xfe", "utf-16"),
+    (b"\xfe\xff", "utf-16"),
+)
+_CONTROL = re.compile(r"[\x00-\x08\x0b\x0e-\x1f\x7f]")
+
+
+def _guess_utf16(sample: bytes) -> str | None:
+    """无 BOM 的 UTF-16：ASCII 字符的 00 高字节几乎只落在同一奇偶位上。"""
+    even, odd = sample[0::2].count(0), sample[1::2].count(0)
+    if odd and even <= odd // 100:
+        return "utf-16-le"
+    if even and odd <= even // 100:
+        return "utf-16-be"
+    return None
+
+
+def _decode_strict(raw: bytes, encoding: str) -> str | None:
+    try:
+        text = raw.decode(encoding)
+    except UnicodeDecodeError:
+        return None
+    # 二进制数据偶尔能按 UTF-16 解码成功，靠控制字符比例排除
+    return None if len(_CONTROL.findall(text[:8192])) > len(text[:8192]) // 100 else text
+
+
 def read_text_file(path: Path) -> str:
     raw = path.read_bytes()
-    if b"\x00" in raw[:8192]:
-        raise ValueError("二进制文件")
+    for bom, encoding in _BOMS:
+        if raw.startswith(bom) and (text := _decode_strict(raw, encoding)) is not None:
+            return text
+    sample = raw[:8192]
+    if b"\x00" in sample:
+        encoding = _guess_utf16(sample)
+        text = _decode_strict(raw[: len(raw) & ~1], encoding) if encoding else None
+        if text is None:
+            raise ValueError("二进制文件")
+        return text
     try:
         return raw.decode("utf-8")
     except UnicodeDecodeError:

@@ -348,7 +348,7 @@ function CollectionCard({
           onChanged()
         }}
       />
-      <ErrorsModal open={showErrors} onOpenChange={setShowErrors} collection={c} />
+      <ErrorsModal open={showErrors} onOpenChange={setShowErrors} collection={c} onChanged={onChanged} />
     </motion.div>
   )
 }
@@ -433,12 +433,36 @@ function KindScope({ c, onChanged }: { c: Collection; onChanged: () => void }) {
   )
 }
 
-function ErrorsModal({ open, onOpenChange, collection }: { open: boolean; onOpenChange: (o: boolean) => void; collection: Collection }) {
+function ErrorsModal({
+  open,
+  onOpenChange,
+  collection,
+  onChanged,
+}: {
+  open: boolean
+  onOpenChange: (o: boolean) => void
+  collection: Collection
+  onChanged: () => void
+}) {
+  const [retrying, setRetrying] = React.useState(false)
   const { data } = useQuery({
     queryKey: ["errors", collection.id],
     queryFn: () => api.collectionErrors(collection.id),
     enabled: open,
   })
+  const retry = async () => {
+    setRetrying(true)
+    try {
+      const { count } = await api.retryCollectionErrors(collection.id)
+      toast(`已重新排队 ${formatNumber(count)} 个失败文件`)
+      onOpenChange(false)
+      onChanged()
+    } catch (e) {
+      toast.error((e as Error).message)
+    } finally {
+      setRetrying(false)
+    }
+  }
   return (
     <Modal
       open={open}
@@ -451,7 +475,15 @@ function ErrorsModal({ open, onOpenChange, collection }: { open: boolean; onOpen
         </span>
       }
       title="失败文件"
-      description={`「${collection.name}」中未能完成索引的文件，文件变化后会自动重试`}
+      description={`「${collection.name}」中未能完成索引的文件，文件变化后会自动重试，也可手动重试全部失败文件`}
+      footer={
+        collection.enabled && !!data?.length && (
+          <Button disabled={retrying} onClick={() => void retry()}>
+            {retrying ? <IconLoader2 className="animate-spin" /> : <IconRefresh />}
+            重试失败文件
+          </Button>
+        )
+      }
     >
       <div className="divide-y">
         {data?.map((f) => (
