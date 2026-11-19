@@ -129,7 +129,7 @@ function IndexingIndicator() {
         <Button
           variant="ghost"
           className={cn(
-            "h-8 gap-2 rounded-full border bg-card px-2.5 text-[12px] font-medium tabular-nums",
+            "h-8 gap-2 rounded-full border-border bg-card px-2.5 text-[12px] font-medium tabular-nums",
             s.model.status === "error" && "text-destructive"
           )}
           aria-label="索引状态"
