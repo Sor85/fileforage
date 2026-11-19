@@ -116,23 +116,22 @@ export function SearchPage() {
       }}
     >
       {!hasQuery ? (
-        <div className="relative mx-auto flex min-h-[calc(100dvh-64px)] max-w-3xl flex-col items-center justify-center px-5 pb-[12vh]">
+        <div className="relative mx-auto flex min-h-[calc(100dvh-64px)] max-w-2xl flex-col items-center justify-center px-5 pb-[14vh]">
           <motion.div
-            initial={{ opacity: 0, y: 10 }}
+            initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, ease: [0.32, 0.72, 0, 1] }}
+            transition={{ duration: 0.5, ease: [0.32, 0.72, 0, 1] }}
             className="flex flex-col items-center text-center"
           >
-            <h1 className="text-[32px] leading-[1.2] font-semibold tracking-[-0.025em] text-balance sm:text-[40px]">
+            <h1 className="text-[28px] leading-[1.25] font-semibold tracking-[-0.02em] text-balance sm:text-[32px]">
               用一句话找到任何文件
             </h1>
-            <p className="mt-3 max-w-2xl text-[15px] leading-relaxed text-pretty text-muted-foreground">
+            <p className="mt-2.5 max-w-xl text-[14px] leading-relaxed text-balance text-muted-foreground">
               文档、图片、视频与音频共享同一个语义空间。描述画面、复述一句台词，或丢进一张相似的图片。
             </p>
-            <p className="mt-2 text-[12.5px] text-muted-foreground/80">EmbeddingGemma 2 · 全部在本机运行</p>
           </motion.div>
 
-          <div className="mt-9 w-full">
+          <div className="mt-8 w-full">
             <SearchBox
               size="hero"
               value={input}
@@ -148,15 +147,15 @@ export function SearchPage() {
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 0.25, duration: 0.6 }}
-            className="mt-5 flex flex-wrap justify-center gap-2"
+            transition={{ delay: 0.15, duration: 0.4 }}
+            className="mt-4 flex flex-wrap justify-center gap-1.5"
           >
             {EXAMPLES.map((e) => (
               <button
                 key={e}
                 type="button"
                 onClick={() => setSearchParams({ q: e }, false)}
-                className="rounded-full border bg-card px-3 py-1 text-[12.5px] text-muted-foreground transition-colors outline-none hover:border-foreground/15 hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/40"
+                className="rounded-full bg-muted px-2.5 py-1 text-[12.5px] leading-4 text-muted-foreground transition-colors outline-none hover:bg-foreground/8 hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/40"
               >
                 {e}
               </button>
@@ -165,10 +164,10 @@ export function SearchPage() {
 
           {noCollections ? (
             <motion.div
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.35, duration: 0.6 }}
-              className="mt-12 flex w-full max-w-md items-center gap-4 rounded-2xl border border-dashed bg-card/60 p-4 text-left backdrop-blur"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.2, duration: 0.4 }}
+              className="mt-10 flex w-full max-w-md items-center gap-4 rounded-2xl border bg-card p-4 text-left"
             >
               <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-brand/10 text-brand">
                 <IconFolderPlus className="size-5" stroke={1.8} />
@@ -187,7 +186,7 @@ export function SearchPage() {
         </div>
       ) : (
         <div className="relative mx-auto max-w-[1400px] px-4 pb-16 sm:px-6">
-          <div className="sticky top-0 z-10 -mx-4 bg-linear-to-b from-background via-background/92 to-background/0 px-4 pt-3 pb-4 sm:-mx-6 sm:px-6">
+          <div className="sticky top-0 z-10 -mx-4 bg-background px-4 pt-3 pb-3 sm:-mx-6 sm:px-6">
             <div className="mx-auto max-w-3xl">
               <SearchBox
                 size="compact"
@@ -199,7 +198,7 @@ export function SearchPage() {
                 onClearImage={clearImage}
               />
             </div>
-            <div className="mx-auto mt-4 flex max-w-[1400px] flex-wrap items-center gap-x-4 gap-y-2">
+            <div className="mx-auto mt-3 flex max-w-[1400px] flex-wrap items-center gap-x-4 gap-y-2">
               <div className="flex gap-1" role="tablist" aria-label="按类型筛选">
                 {FILTERS.map((f) => {
                   const on = f.key === filter
@@ -244,6 +243,7 @@ export function SearchPage() {
             </div>
           </div>
 
+          <div className="h-4" />
           {active.isError ? (
             <EmptyState title="检索失败" body={(active.error as Error).message} />
           ) : !active.data ? (
@@ -291,10 +291,10 @@ function HeroStats({ byKind, total }: { byKind: Partial<Record<Kind, number>>; t
   const kinds: Kind[] = ["document", "text", "image", "video", "audio"]
   return (
     <motion.div
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.35, duration: 0.6 }}
-      className="mt-14 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-[12.5px] text-muted-foreground"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ delay: 0.2, duration: 0.4 }}
+      className="mt-10 flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 text-[12px] text-muted-foreground"
     >
       <span>
         已索引 <span className="font-medium text-foreground tabular-nums">{formatNumber(total)}</span> 个文件
@@ -304,7 +304,8 @@ function HeroStats({ byKind, total }: { byKind: Partial<Record<Kind, number>>; t
         .map((k) => (
           <span key={k} className="inline-flex items-center gap-1.5">
             <span className={cn("size-1.5 rounded-full bg-current", KIND_COLOR[k])} />
-            {KIND_LABEL[k]} <span className="text-foreground tabular-nums">{formatNumber(byKind[k] ?? 0)}</span>
+            {KIND_LABEL[k]}
+            <span className="text-foreground tabular-nums">{formatNumber(byKind[k] ?? 0)}</span>
           </span>
         ))}
     </motion.div>

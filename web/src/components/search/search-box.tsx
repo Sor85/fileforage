@@ -71,14 +71,14 @@ export function SearchBox({
         onSubmit()
       }}
       className={cn(
-        "group relative flex w-full items-center border bg-card shadow-(--shadow-float) transition-[box-shadow,border-color] duration-200 focus-within:border-foreground/25",
-        hero ? "h-16 gap-3 rounded-[22px] pr-2.5 pl-5" : "h-12 gap-2.5 rounded-2xl pr-2 pl-4"
+        "group relative flex w-full items-center border bg-card shadow-(--shadow-card) transition-[box-shadow,border-color] duration-200 focus-within:border-foreground/25 focus-within:shadow-(--shadow-float)",
+        hero ? "h-14 gap-3 rounded-2xl pr-2 pl-4.5" : "h-11 gap-2.5 rounded-xl pr-1.5 pl-3.5"
       )}
     >
-      <IconSearch className={cn("shrink-0 text-muted-foreground", hero ? "size-[22px]" : "size-[18px]")} stroke={1.8} />
+      <IconSearch className={cn("shrink-0 text-muted-foreground", hero ? "size-5" : "size-[18px]")} stroke={1.8} />
       {imagePreview && (
         <span className="flex shrink-0 items-center gap-1.5 rounded-xl border bg-muted/60 py-1 pr-1 pl-1">
-          <img src={imagePreview} alt="用于检索的图片" className={cn("rounded-lg object-cover", hero ? "size-9" : "size-7")} />
+          <img src={imagePreview} alt="用于检索的图片" className={cn("rounded-lg object-cover", hero ? "size-8" : "size-7")} />
           <span className="text-[12px] text-muted-foreground">以图搜索</span>
           <Button type="button" variant="ghost" size="icon-xs" className="rounded-full" onClick={onClearImage} aria-label="移除检索图片">
             <IconX className="size-3.5" />
@@ -91,14 +91,14 @@ export function SearchBox({
         autoFocus={autoFocus}
         disabled={disabled}
         onChange={(e) => onChange(e.target.value)}
-        placeholder={imagePreview ? "" : "描述你要找的内容，例如“海边的日落”或“会议里提到的预算”"}
+        placeholder={imagePreview ? "" : "描述要找的内容，例如“海边的日落”或“会议里提到的预算”"}
         aria-label="检索内容"
         className={cn(
           "min-w-0 flex-1 bg-transparent outline-none placeholder:text-muted-foreground/70 disabled:opacity-60",
-          hero ? "text-[17px] tracking-[-0.01em]" : "text-[15px]"
+          hero ? "text-[16px]" : "text-[14.5px]"
         )}
       />
-      {!value && !imagePreview && (
+      {!hero && !value && !imagePreview && (
         <span className="hidden items-center gap-1 text-muted-foreground sm:flex">
           <Kbd>{isMac ? "⌘" : "Ctrl"}</Kbd>
           <Kbd>K</Kbd>
@@ -121,7 +121,7 @@ export function SearchBox({
             type="button"
             variant="ghost"
             size="icon"
-            className={cn("shrink-0 rounded-xl text-muted-foreground", hero ? "size-10" : "size-8")}
+            className={cn("shrink-0 rounded-lg text-muted-foreground", hero ? "size-10" : "size-8")}
             onClick={() => fileRef.current?.click()}
             aria-label="以图搜索"
           >
@@ -134,7 +134,7 @@ export function SearchBox({
         type="submit"
         size="icon"
         disabled={disabled || (!value.trim() && !imagePreview)}
-        className={cn("shrink-0 rounded-xl", hero ? "size-11" : "size-8")}
+        className={cn("shrink-0 rounded-lg", hero ? "size-10" : "size-8")}
         aria-label="检索"
       >
         <IconArrowRight className={hero ? "size-5" : "size-4"} stroke={2} />

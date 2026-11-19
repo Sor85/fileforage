@@ -94,19 +94,13 @@ function ProgressRing({ value, spinning }: { value: number; spinning?: boolean }
         cy="9"
         r={r}
         fill="none"
-        stroke="url(#ring-g)"
+        stroke="var(--brand)"
         strokeWidth="2.2"
         strokeLinecap="round"
         strokeDasharray={c}
         strokeDashoffset={c * (1 - (spinning ? 0.28 : Math.max(0.02, value)))}
         style={{ transition: "stroke-dashoffset 600ms cubic-bezier(0.32,0.72,0,1)" }}
       />
-      <defs>
-        <linearGradient id="ring-g" x1="0" y1="0" x2="18" y2="18" gradientUnits="userSpaceOnUse">
-          <stop stopColor="var(--brand)" />
-          <stop offset="1" stopColor="var(--brand-2)" />
-        </linearGradient>
-      </defs>
     </svg>
   )
 }
@@ -180,7 +174,7 @@ function IndexingIndicator() {
               </div>
               <div className="h-1.5 overflow-hidden rounded-full bg-muted">
                 <div
-                  className="h-full rounded-full bg-linear-to-r from-brand to-brand-2 transition-[width] duration-700 ease-(--ease-sheet)"
+                  className="h-full rounded-full bg-brand transition-[width] duration-700 ease-(--ease-sheet)"
                   style={{ width: `${Math.round(sum.value * 100)}%` }}
                 />
               </div>

@@ -31,7 +31,7 @@ export function RelevanceMeter({ value, className }: { value: number; className?
       <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground tabular-nums">
         <span className="relative h-1 w-8 overflow-hidden rounded-full bg-foreground/10">
           <span
-            className="absolute inset-y-0 left-0 rounded-full bg-linear-to-r from-brand to-brand-2"
+            className="absolute inset-y-0 left-0 rounded-full bg-brand"
             style={{ width: `${Math.max(6, pct)}%` }}
           />
         </span>

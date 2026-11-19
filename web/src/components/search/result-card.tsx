@@ -16,11 +16,11 @@ export function ResultCard(props: CardProps) {
   return (
     <motion.button
       type="button"
-      initial={{ opacity: 0, y: 14, scale: 0.985 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{ duration: 0.5, ease: [0.32, 0.72, 0, 1], delay: Math.min(index, 16) * 0.03 }}
+      initial={{ opacity: 0, y: 6 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.35, ease: [0.32, 0.72, 0, 1], delay: Math.min(index, 12) * 0.02 }}
       onClick={() => onOpen(result)}
-      className="group/card relative flex w-full flex-col overflow-hidden rounded-2xl border bg-card text-left shadow-(--shadow-card) transition-[transform,box-shadow,border-color] duration-300 ease-(--ease-sheet) outline-none hover:-translate-y-0.5 hover:border-foreground/12 hover:shadow-(--shadow-float) focus-visible:ring-3 focus-visible:ring-ring/40"
+      className="group/card relative flex w-full flex-col overflow-hidden rounded-2xl border bg-card text-left shadow-(--shadow-card) transition-[box-shadow,border-color] duration-200 outline-none hover:border-foreground/15 hover:shadow-(--shadow-float) focus-visible:ring-3 focus-visible:ring-ring/40"
     >
       {k === "image" && <ImageBody {...props} />}
       {k === "video" && <VideoBody {...props} />}
@@ -73,7 +73,7 @@ function Thumb({ src, ratio, alt }: { src: string; ratio: number; alt: string })
         decoding="async"
         onLoad={() => setLoaded(true)}
         className={cn(
-          "size-full object-cover transition-[opacity,transform,filter] duration-700 ease-(--ease-sheet) group-hover/card:scale-[1.035]",
+          "size-full object-cover transition-[opacity,filter] duration-500",
           loaded ? "opacity-100 blur-0" : "opacity-0 blur-md"
         )}
       />
@@ -170,10 +170,10 @@ function AudioBody({ result, query }: CardProps) {
   const at = m.start != null && dur ? m.start / dur : null
   return (
     <>
-      <div className="relative mx-3.5 mt-3.5 overflow-hidden rounded-xl bg-linear-to-br from-kind-audio/18 via-kind-audio/8 to-transparent px-3.5 pt-3 pb-3.5">
+      <div className="relative mx-3.5 mt-3.5 overflow-hidden rounded-xl bg-kind-audio/10 px-3.5 pt-3 pb-3.5">
         <div className="flex items-center justify-between text-[11px] font-medium text-kind-audio tabular-nums">
           <span className="flex items-center gap-1.5">
-            <span className="flex size-6 items-center justify-center rounded-full bg-kind-audio text-white transition-transform duration-300 group-hover/card:scale-110 dark:text-black">
+            <span className="flex size-6 items-center justify-center rounded-full bg-kind-audio text-white dark:text-black">
               <IconPlayerPlayFilled className="size-3" />
             </span>
             {m.start != null ? formatDuration(m.start) : "音频"}

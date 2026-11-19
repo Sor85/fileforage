@@ -239,7 +239,7 @@ function CollectionCard({
           <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted">
             {progress.phase === "indexing" ? (
               <div
-                className="h-full rounded-full bg-linear-to-r from-brand to-brand-2 transition-[width] duration-700 ease-(--ease-sheet)"
+                className="h-full rounded-full bg-brand transition-[width] duration-700 ease-(--ease-sheet)"
                 style={{ width: `${Math.max(2, pct * 100)}%` }}
               />
             ) : (
